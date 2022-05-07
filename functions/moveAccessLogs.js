@@ -13,6 +13,7 @@ const targetKeyPrefix = process.env.TARGET_KEY_PREFIX;
 // - 4.	hour
 const datePattern = '[^\\d](\\d{4})-(\\d{2})-(\\d{2})-(\\d{2})[^\\d]';
 const filenamePattern = '[^/]+$';
+const withoutChanging = "This copy request is illegal because it is trying to copy an object to itself without changing the object's metadata, storage class, website redirect location or encryption attributes."
 
 exports.handler = async (event, context, callback) => {
   const moves = event.Records.map(record => {
@@ -47,8 +48,10 @@ exports.handler = async (event, context, callback) => {
         console.log(`Deleted ${sourceKey}.`);
         return del;
       }, function (reason) {
-        const error = new Error(`Error while copying ${sourceKey}: ${reason}`);
-        callback(error);
+        if (!reason.includes(withoutChanging)){
+          const error = new Error(`Error while copying ${sourceKey}: ${reason}`);
+          callback(error);
+        }
       });
 
     }
